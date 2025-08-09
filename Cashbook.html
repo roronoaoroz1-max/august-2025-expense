@@ -185,9 +185,7 @@
   </div>
 
   <script>
-   const scriptUrl = 'https://script.google.com/macros/s/AKfycbxlWiCUdWxgK1qVD9dOsBPBA-as2qRCrNazs8opsiz2TM3UVVM1C5pUaAD9kRdydU1q/exec';
-
-
+    const scriptUrl = 'https://script.google.com/macros/s/AKfycbxlWiCUdWxgK1qVD9dOsBPBA-as2qRCrNazs8opsiz2TM3UVVM1C5pUaAD9kRdydU1q/exec';
 
     let cashIn = 0;
     let cashOut = 0;
@@ -212,37 +210,36 @@
     }
 
     // Add new category
-  document.getElementById('addCategoryButton').addEventListener('click', async () => {
-  const newCat = prompt("Enter new category name:");
-  if (newCat && newCat.trim()) {
-    const trimmed = newCat.trim();
-    const dropdown = document.getElementById('category');
+    document.getElementById('addCategoryButton').addEventListener('click', async () => {
+      const newCat = prompt("Enter new category name:");
+      if (newCat && newCat.trim()) {
+        const trimmed = newCat.trim();
+        const dropdown = document.getElementById('category');
 
-    // Avoid duplicates
-    if (![...dropdown.options].some(opt => opt.value === trimmed)) {
-      // Call Apps Script to save it
-      const response = await fetch(scriptUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'addCategory',
-          category: trimmed
-        })
-      });
+        // Avoid duplicates
+        if (![...dropdown.options].some(opt => opt.value === trimmed)) {
+          // Call Apps Script to save it
+          const response = await fetch(scriptUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'addCategory',
+              category: trimmed
+            })
+          });
 
-      const result = await response.json();
-      if (result.success) {
-        await fetchCategories(); // <- Important! Reload from server
-        alert(`Category "${trimmed}" added.`);
-      } else {
-        alert("Could not add category (maybe it already exists).");
+          const result = await response.json();
+          if (result.success) {
+            await fetchCategories(); // <- Important! Reload from server
+            alert(`Category "${trimmed}" added.`);
+          } else {
+            alert("Could not add category (maybe it already exists).");
+          }
+        } else {
+          alert("Category already exists.");
+        }
       }
-    } else {
-      alert("Category already exists.");
-    }
-  }
-});
-
+    });
 
     async function fetchSummary() {
       const response = await fetch(scriptUrl, {
@@ -274,77 +271,18 @@
       const list = document.getElementById('transactionList');
       list.innerHTML = transactions.map(t => `
         <div class="transaction-item">
-            <div class="transaction-item">
-              <strong>${t.date} - ${t.remark}</strong>
-              <p>Category: ${t.category}</p>
-              <p>Cash In: $${t.cashIn} | Cash Out: $${t.cashOut}</p>
-              <p>Balance: $${t.balance}</p>
-            </div>
-          `).join('');
+          <p><strong>Date:</strong> ${t.date}</p>
+          <p><strong>Category:</strong> ${t.category}</p>
+          <p><strong>Remark:</strong> ${t.remark}</p>
+          <p><strong>Amount:</strong> $${t.amount}</p>
+          <p><strong>Type:</strong> ${t.type}</p>
+        </div>
+      `).join('');
     }
 
-    // Form submit handler
-    document.getElementById('transactionForm').addEventListener('submit', async function (e) {
-      e.preventDefault();
-
-      const date = document.getElementById('date').value;
-      const time = new Date().toLocaleTimeString();
-      const remark = document.getElementById('remark').value;
-      const category = document.getElementById('category').value;
-      const amount = parseFloat(document.getElementById('amount').value);
-
-      if (!amount || amount <= 0) {
-        alert("Please enter a valid amount.");
-        return;
-      }
-
-      await fetch(scriptUrl, {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    action: 'addTransaction',
-    date,
-    time,
-    remark,
-    category,
-    cashIn,   // either 0 or the amount
-    cashOut   // either 0 or the amount
-  })
-});
-
-      // Reset inputs
-      document.getElementById('remark').value = '';
-      document.getElementById('amount').value = '';
-      cashIn = 0;
-      cashOut = 0;
-
-      fetchSummary(); // Refresh summary and transactions
-    });
-
-    // Button logic
-    document.getElementById('cashInButton').addEventListener('click', function () {
-      const amountField = document.getElementById('amount');
-      const value = parseFloat(amountField.value) || 0;
-      cashIn = value;
-      cashOut = 0;
-    });
-
-    document.getElementById('cashOutButton').addEventListener('click', function () {
-      const amountField = document.getElementById('amount');
-      const value = parseFloat(amountField.value) || 0;
-      cashOut = value;
-      cashIn = 0;
-    });
-
-    // Initial load
     fetchCategories();
     fetchSummary();
+
   </script>
 </body>
 </html>
-
-
-
-
-
-
