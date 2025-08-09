@@ -185,7 +185,8 @@
   </div>
 
   <script>
-    const scriptUrl = 'https://script.google.com/macros/s/AKfycbxxFYBQE3V_KeEBORdvuhlIF7DkH1ethVbBXV6mRkAF8SFFabfDbWnS-3AksGWSDTEw/exec'; // Replace this with your actual Apps Script URL
+   const scriptUrl = 'https://script.google.com/macros/s/AKfycbxlWiCUdWxgK1qVD9dOsBPBA-as2qRCrNazs8opsiz2TM3UVVM1C5pUaAD9kRdydU1q/exec';
+
 
     let cashIn = 0;
     let cashOut = 0;
@@ -297,19 +298,18 @@
       }
 
       await fetch(scriptUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'addTransaction',
-          date,
-          time,
-          remark,
-          category,
-          cashIn,
-          cashOut,
-          amount
-        })
-      });
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    action: 'addTransaction',
+    date,
+    time,
+    remark,
+    category,
+    cashIn,   // either 0 or the amount
+    cashOut   // either 0 or the amount
+  })
+});
 
       // Reset inputs
       document.getElementById('remark').value = '';
@@ -341,3 +341,4 @@
   </script>
 </body>
 </html>
+
