@@ -1,1 +1,343 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Expense Tracker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #e0f7fa, #80deea);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 30px;
+      width: 100%;
+      max-width: 800px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+
+    h1 {
+      text-align: center;
+      color: #006064;
+      font-size: 2rem;
+      margin-bottom: 20px;
+      letter-spacing: 1px;
+    }
+
+    label {
+      font-weight: 600;
+      color: #00796b;
+      margin-top: 10px;
+      display: block;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0 16px;
+      border-radius: 8px;
+      border: 1px solid #b2dfdb;
+      font-size: 1rem;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    input:focus, select:focus {
+      border-color: #004d40;
+      box-shadow: 0 0 4px rgba(0, 77, 64, 0.4);
+    }
+
+    input[disabled] {
+      background-color: #f1f1f1;
+    }
+
+    button {
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    #addCategoryButton {
+      background-color: #ffca28;
+      color: #333;
+      border: none;
+    }
+
+    #addCategoryButton:hover {
+      background-color: #fbc02d;
+    }
+
+    .cash-in-btn {
+      background: #4caf50;
+      color: #fff;
+      border: none;
+    }
+    .cash-in-btn:hover { background: #388e3c; }
+
+    .cash-out-btn {
+      background: #e53935;
+      color: #fff;
+      border: none;
+    }
+    .cash-out-btn:hover { background: #c62828; }
+
+    .button-container {
+      display: flex;
+      gap: 10px;
+    }
+
+    .amount-container {
+      display: flex;
+      gap: 10px;
+    }
+    .amount-container > div { flex: 1; }
+
+    .summary {
+      margin-top: 30px;
+      background: #e0f2f1;
+      padding: 20px;
+      border-radius: 8px;
+    }
+    .summary h3 {
+      color: #00796b;
+      margin-bottom: 12px;
+    }
+    .summary p {
+      font-size: 1.1rem;
+      margin: 6px 0;
+    }
+    .summary .value {
+      font-weight: bold;
+    }
+
+    .transaction-list h3 {
+      color: #00796b;
+      margin-top: 30px;
+    }
+    .transaction-item {
+      background: #b2dfdb;
+      padding: 12px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    @media (max-width: 600px) {
+      .amount-container, .button-container {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>August Expense Tracker</h1>
+    <form id="transactionForm">
+      <label for="date">Date</label>
+      <input type="date" id="date" required value="2025-08-01" />
+
+      <label for="time">Time</label>
+      <input type="time" id="time" disabled value="00:00" />
+
+      <label for="remark">Remark</label>
+      <input type="text" id="remark" placeholder="Groceries, Salary..." required />
+
+      <label for="category">Category</label>
+      <select id="category" required></select>
+      <button type="button" id="addCategoryButton">+ Add New Category</button>
+
+      <div class="button-container">
+        <button type="button" id="cashInButton" class="cash-in-btn">Cash In</button>
+        <button type="button" id="cashOutButton" class="cash-out-btn">Cash Out</button>
+      </div>
+
+      <div class="amount-container">
+        <div>
+          <label for="amount">Amount</label>
+          <input type="number" id="amount" placeholder="Enter amount" required />
+        </div>
+        <div>
+          <label for="balance">Balance</label>
+          <input type="text" id="balance" disabled placeholder="Balance" />
+        </div>
+      </div>
+
+      <button type="submit" id="submitTransaction">Add Transaction</button>
+    </form>
+
+    <div class="summary">
+      <h3>Summary for August</h3>
+      <div id="summaryDisplay"></div>
+    </div>
+
+    <div class="transaction-list">
+      <h3>Transactions</h3>
+      <div id="transactionList"></div>
+    </div>
+  </div>
+
+  <script>
+    const scriptUrl = 'https://script.google.com/macros/s/AKfycbxxFYBQE3V_KeEBORdvuhlIF7DkH1ethVbBXV6mRkAF8SFFabfDbWnS-3AksGWSDTEw/exec'; // Replace this with your actual Apps Script URL
+
+    let cashIn = 0;
+    let cashOut = 0;
+
+    // Load categories
+    async function fetchCategories() {
+      const response = await fetch(scriptUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'getCategories' })
+      });
+
+      const categories = await response.json();
+      const dropdown = document.getElementById('category');
+      dropdown.innerHTML = '';
+      categories.forEach(category => {
+        const option = document.createElement('option');
+        option.value = category;
+        option.textContent = category;
+        dropdown.appendChild(option);
+      });
+    }
+
+    // Add new category
+    document.getElementById('addCategoryButton').addEventListener('click', async () => {
+      const newCat = prompt("Enter new category name:");
+      if (newCat && newCat.trim()) {
+        const trimmed = newCat.trim();
+        const dropdown = document.getElementById('category');
+        if (![...dropdown.options].some(opt => opt.value === trimmed)) {
+          const response = await fetch(scriptUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'addCategory',
+              category: trimmed
+            })
+          });
+          const result = await response.json();
+          if (result.success) {
+            await fetchCategories();
+            alert(`Category "${trimmed}" added.`);
+          } else {
+            alert("Could not add category.");
+          }
+        } else {
+          alert("Category already exists.");
+        }
+      }
+    });
+
+    async function fetchSummary() {
+      const response = await fetch(scriptUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'getSummary' })
+      });
+
+      const summary = await response.json();
+      const display = document.getElementById('summaryDisplay');
+      const color = summary.finalBalance >= 0 ? '#4caf50' : '#e53935';
+
+      display.innerHTML = `
+        <p>Total Cash In: <span class="value" style="color: #4caf50;">$${summary.totalCashIn}</span></p>
+        <p>Total Cash Out: <span class="value" style="color: #e53935;">$${summary.totalCashOut}</span></p>
+        <p>Remaining Balance: <span class="value" style="color: ${color};">$${summary.finalBalance}</span></p>
+      `;
+      fetchTransactions();
+    }
+
+    async function fetchTransactions() {
+      const response = await fetch(scriptUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'getTransactions' })
+      });
+
+      const transactions = await response.json();
+      const list = document.getElementById('transactionList');
+      list.innerHTML = transactions.map(t => `
+        <div class="transaction-item">
+            <div class="transaction-item">
+              <strong>${t.date} - ${t.remark}</strong>
+              <p>Category: ${t.category}</p>
+              <p>Cash In: $${t.cashIn} | Cash Out: $${t.cashOut}</p>
+              <p>Balance: $${t.balance}</p>
+            </div>
+          `).join('');
+    }
+
+    // Form submit handler
+    document.getElementById('transactionForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      const date = document.getElementById('date').value;
+      const time = new Date().toLocaleTimeString();
+      const remark = document.getElementById('remark').value;
+      const category = document.getElementById('category').value;
+      const amount = parseFloat(document.getElementById('amount').value);
+
+      if (!amount || amount <= 0) {
+        alert("Please enter a valid amount.");
+        return;
+      }
+
+      await fetch(scriptUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'addTransaction',
+          date,
+          time,
+          remark,
+          category,
+          cashIn,
+          cashOut,
+          amount
+        })
+      });
+
+      // Reset inputs
+      document.getElementById('remark').value = '';
+      document.getElementById('amount').value = '';
+      cashIn = 0;
+      cashOut = 0;
+
+      fetchSummary(); // Refresh summary and transactions
+    });
+
+    // Button logic
+    document.getElementById('cashInButton').addEventListener('click', function () {
+      const amountField = document.getElementById('amount');
+      const value = parseFloat(amountField.value) || 0;
+      cashIn = value;
+      cashOut = 0;
+    });
+
+    document.getElementById('cashOutButton').addEventListener('click', function () {
+      const amountField = document.getElementById('amount');
+      const value = parseFloat(amountField.value) || 0;
+      cashOut = value;
+      cashIn = 0;
+    });
+
+    // Initial load
+    fetchCategories();
+    fetchSummary();
+  </script>
+</body>
+</html>
+
+</html>
+
+
