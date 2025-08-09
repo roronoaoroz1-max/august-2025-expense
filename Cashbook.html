@@ -210,32 +210,37 @@
     }
 
     // Add new category
-    document.getElementById('addCategoryButton').addEventListener('click', async () => {
-      const newCat = prompt("Enter new category name:");
-      if (newCat && newCat.trim()) {
-        const trimmed = newCat.trim();
-        const dropdown = document.getElementById('category');
-        if (![...dropdown.options].some(opt => opt.value === trimmed)) {
-          const response = await fetch(scriptUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              action: 'addCategory',
-              category: trimmed
-            })
-          });
-          const result = await response.json();
-          if (result.success) {
-            await fetchCategories();
-            alert(`Category "${trimmed}" added.`);
-          } else {
-            alert("Could not add category.");
-          }
-        } else {
-          alert("Category already exists.");
-        }
+  document.getElementById('addCategoryButton').addEventListener('click', async () => {
+  const newCat = prompt("Enter new category name:");
+  if (newCat && newCat.trim()) {
+    const trimmed = newCat.trim();
+    const dropdown = document.getElementById('category');
+
+    // Avoid duplicates
+    if (![...dropdown.options].some(opt => opt.value === trimmed)) {
+      // Call Apps Script to save it
+      const response = await fetch(scriptUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'addCategory',
+          category: trimmed
+        })
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        await fetchCategories(); // <- Important! Reload from server
+        alert(`Category "${trimmed}" added.`);
+      } else {
+        alert("Could not add category (maybe it already exists).");
       }
-    });
+    } else {
+      alert("Category already exists.");
+    }
+  }
+});
+
 
     async function fetchSummary() {
       const response = await fetch(scriptUrl, {
@@ -336,6 +341,3 @@
   </script>
 </body>
 </html>
-
-</html>
-
