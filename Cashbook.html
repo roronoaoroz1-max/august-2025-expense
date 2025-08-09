@@ -41,7 +41,7 @@
       display: block;
     }
 
-    input, select, button {
+    input, button {
       width: 100%;
       padding: 12px;
       margin: 8px 0 16px;
@@ -54,10 +54,6 @@
     input:focus, select:focus {
       border-color: #004d40;
       box-shadow: 0 0 4px rgba(0, 77, 64, 0.4);
-    }
-
-    input[disabled] {
-      background-color: #f1f1f1;
     }
 
     button {
@@ -130,6 +126,46 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
 
+    .accordion {
+      background-color: #00796b;
+      color: white;
+      cursor: pointer;
+      padding: 12px;
+      width: 100%;
+      text-align: left;
+      border: none;
+      outline: none;
+      font-size: 1rem;
+      border-radius: 8px;
+      margin-top: 10px;
+    }
+
+    .accordion:hover {
+      background-color: #004d40;
+    }
+
+    .category-list {
+      display: none;
+      padding-left: 20px;
+      margin-top: 10px;
+    }
+
+    .category-item {
+      padding: 8px;
+      background: #b2dfdb;
+      border-radius: 4px;
+      margin-bottom: 6px;
+      cursor: pointer;
+    }
+
+    .category-item:hover {
+      background: #80deea;
+    }
+
+    .accordion.active + .category-list {
+      display: block;
+    }
+
     @media (max-width: 600px) {
       .amount-container, .button-container {
         flex-direction: column;
@@ -151,7 +187,12 @@
       <input type="text" id="remark" placeholder="Groceries, Salary..." required />
 
       <label for="category">Category</label>
-      <select id="category" required></select>
+      <div id="categoryAccordionContainer">
+        <button type="button" class="accordion">Select Category</button>
+        <div id="categoryList" class="category-list">
+          <!-- Categories will be populated here -->
+        </div>
+      </div>
       <button type="button" id="addCategoryButton">+ Add New Category</button>
 
       <div class="button-container">
@@ -185,103 +226,59 @@
   </div>
 
   <script>
-    const scriptUrl = 'https://script.google.com/macros/s/AKfycbxlWiCUdWxgK1qVD9dOsBPBA-as2qRCrNazs8opsiz2TM3UVVM1C5pUaAD9kRdydU1q/exec';
+    // Hardcoded categories
+    const categories = [
+      "Salary", "Grocery", "Food", "Health", "Coffee", "Travel", 
+      "Self Care", "Gas", "Medianet", "Fuel", "Phone Bill", "Wifi", 
+      "Repair", "Trust Fund", "Gift/Inward", "Gift/Outward", "Stelco", 
+      "MWSC", "Giveaway", "Rent", "Last Month Borrowing", "Repaid loan"
+    ];
 
-    let cashIn = 0;
-    let cashOut = 0;
+    // Handle category selection
+    function selectCategory(category) {
+      const categoryButton = document.querySelector('.accordion');
+      categoryButton.textContent = category;
+      categoryButton.classList.remove('active');
+      document.getElementById('categoryList').style.display = 'none';
+    }
 
-    // Load categories
-    async function fetchCategories() {
-      const response = await fetch(scriptUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'getCategories' })
-      });
+    // Toggle accordion for category list
+    document.querySelector('.accordion').addEventListener('click', function() {
+      this.classList.toggle('active');
+      const categoryList = document.getElementById('categoryList');
+      categoryList.style.display = categoryList.style.display === 'block' ? 'none' : 'block';
+    });
 
-      const categories = await response.json();
-      const dropdown = document.getElementById('category');
-      dropdown.innerHTML = '';
+    // Add categories to the list
+    function populateCategories() {
+      const categoryList = document.getElementById('categoryList');
+      categoryList.innerHTML = ''; // Clear any existing categories
       categories.forEach(category => {
-        const option = document.createElement('option');
-        option.value = category;
-        option.textContent = category;
-        dropdown.appendChild(option);
+        const categoryItem = document.createElement('div');
+        categoryItem.classList.add('category-item');
+        categoryItem.textContent = category;
+        categoryItem.onclick = () => selectCategory(category);
+        categoryList.appendChild(categoryItem);
       });
     }
 
-    // Add new category
+    // Add new category functionality (if needed)
     document.getElementById('addCategoryButton').addEventListener('click', async () => {
       const newCat = prompt("Enter new category name:");
       if (newCat && newCat.trim()) {
         const trimmed = newCat.trim();
-        const dropdown = document.getElementById('category');
-
-        // Avoid duplicates
-        if (![...dropdown.options].some(opt => opt.value === trimmed)) {
-          // Call Apps Script to save it
-          const response = await fetch(scriptUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              action: 'addCategory',
-              category: trimmed
-            })
-          });
-
-          const result = await response.json();
-          if (result.success) {
-            await fetchCategories(); // <- Important! Reload from server
-            alert(`Category "${trimmed}" added.`);
-          } else {
-            alert("Could not add category (maybe it already exists).");
-          }
+        if (!categories.includes(trimmed)) {
+          categories.push(trimmed);
+          populateCategories();
+          alert(`Category "${trimmed}" added.`);
         } else {
           alert("Category already exists.");
         }
       }
     });
 
-    async function fetchSummary() {
-      const response = await fetch(scriptUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'getSummary' })
-      });
-
-      const summary = await response.json();
-      const display = document.getElementById('summaryDisplay');
-      const color = summary.finalBalance >= 0 ? '#4caf50' : '#e53935';
-
-      display.innerHTML = `
-        <p>Total Cash In: <span class="value" style="color: #4caf50;">$${summary.totalCashIn}</span></p>
-        <p>Total Cash Out: <span class="value" style="color: #e53935;">$${summary.totalCashOut}</span></p>
-        <p>Remaining Balance: <span class="value" style="color: ${color};">$${summary.finalBalance}</span></p>
-      `;
-      fetchTransactions();
-    }
-
-    async function fetchTransactions() {
-      const response = await fetch(scriptUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'getTransactions' })
-      });
-
-      const transactions = await response.json();
-      const list = document.getElementById('transactionList');
-      list.innerHTML = transactions.map(t => `
-        <div class="transaction-item">
-          <p><strong>Date:</strong> ${t.date}</p>
-          <p><strong>Category:</strong> ${t.category}</p>
-          <p><strong>Remark:</strong> ${t.remark}</p>
-          <p><strong>Amount:</strong> $${t.amount}</p>
-          <p><strong>Type:</strong> ${t.type}</p>
-        </div>
-      `).join('');
-    }
-
-    fetchCategories();
-    fetchSummary();
+    // Initialize category list and populate it
+    populateCategories();
 
   </script>
 </body>
