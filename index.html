@@ -351,8 +351,61 @@
       }
     });
 
-    document.getElementById('submitTransaction').addEventListener('click', function(event) {
-      event.preventDefault();
+    const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbzfIURYPr1ZMBlY8v-Bu5sv8TX5mIfyQib5nWzm_PaWGxNH6olCOtCsqpYNOZg5joY/exec";
+
+document.getElementById('submitTransaction').addEventListener('click', function(event) {
+  event.preventDefault();
+
+  const date = document.getElementById('date').value;
+  const remark = document.getElementById('remark').value;
+  const category = document.querySelector('.accordion').textContent;
+  const amount = parseFloat(document.getElementById('amount').value);
+
+  if (!category || !remark || !amount || !currentType || category === 'Select Category') {
+    alert("Please fill in all fields and select a valid category and transaction type!");
+    return;
+  }
+
+  if (currentType === 'Cash In') {
+    balance += amount;
+  } else {
+    balance -= amount;
+  }
+
+  const transaction = {
+    date: date,
+    remark: remark,
+    category: category,
+    amount: amount,
+    type: currentType,
+    balance: balance
+  };
+
+  // Save locally
+  transactions.push(transaction);
+  document.getElementById('balance').value = balance.toFixed(2);
+  displayTransactions();
+  updateSummary();
+  document.getElementById('transactionForm').reset();
+  document.querySelector('.accordion').textContent = 'Select Category';
+  document.querySelector('.cash-in-btn').classList.remove('active');
+  document.querySelector('.cash-out-btn').classList.remove('active');
+
+  // Send to Google Sheets
+  fetch(GOOGLE_SHEET_API_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(transaction)
+  }).then(() => {
+    console.log('Transaction sent to Google Sheets');
+  }).catch((error) => {
+    console.error('Failed to send transaction to Google Sheets:', error);
+  });
+});
+
 
       const date = document.getElementById('date').value;
       const remark = document.getElementById('remark').value;
