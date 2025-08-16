@@ -327,8 +327,6 @@
 
     document.querySelector('.accordion').addEventListener('click', function() {
   this.classList.toggle('active');
-
-
     });
 
     function populateCategories() {
@@ -356,8 +354,36 @@
 document.getElementById('submitTransaction').addEventListener('click', function(event) {
   event.preventDefault();
 
-  
+    const date = document.getElementById('date').value;
+      const remark = document.getElementById('remark').value;
+      const category = document.querySelector('.accordion').textContent;
+      const amount = parseFloat(document.getElementById('amount').value);
 
+      if (!category || !remark || !amount || !currentType || category === 'Select Category') {
+        alert("Please fill in all fields and select a valid category and transaction type!");
+        return;
+      }
+
+     if (currentType === 'Cash In') {
+        balance += amount;
+      } else {
+        balance -= amount;
+      }
+
+        const transactions = {
+        date,
+        remark,
+        category,
+        amount,
+        type: currentType,
+        balance
+      };
+
+   transactions.push(transaction);
+  document.getElementById('balance').value = balance.toFixed(2);
+  displayTransactions();
+  updateSummary();
+  
   // Send to Google Sheets
   fetch(GOOGLE_SHEET_API_URL, {
     method: 'POST',
@@ -371,45 +397,15 @@ document.getElementById('submitTransaction').addEventListener('click', function(
   }).catch((error) => {
     console.error('Failed to send transaction to Google Sheets:', error);
   });
-});
 
-
-      const date = document.getElementById('date').value;
-      const remark = document.getElementById('remark').value;
-      const category = document.querySelector('.accordion').textContent;
-      const amount = parseFloat(document.getElementById('amount').value);
-
-      if (!category || !remark || !amount || !currentType || category === 'Select Category') {
-        alert("Please fill in all fields and select a valid category and transaction type!");
-        return;
-      }
-
-      if (currentType === 'Cash In') {
-        balance += amount;
-      } else {
-        balance -= amount;
-      }
-
-      transactions.push({
-        date: date,
-        remark: remark,
-        category: category,
-        amount: amount,
-        type: currentType,
-        balance: balance
-      });
-
-      document.getElementById('balance').value = balance.toFixed(2);
-      displayTransactions();
-      updateSummary();
-
-      document.getElementById('transactionForm').reset();
-      document.querySelector('.accordion').textContent = 'Select Category';
-      document.querySelector('.cash-in-btn').classList.remove('active');
-      document.querySelector('.cash-out-btn').classList.remove('active');
-    });
-
-    document.getElementById('cashInButton').addEventListener('click', function() {
+  //Reset
+  document.getElementById('transactionForm').reset();
+  document.querySelector('.accordion').textContent = 'Select Category';
+  document.querySelector('.cash-in-btn').classList.remove('active');
+  document.querySelector('.cash-out-btn').classList.remove('active');
+    });    
+    
+ document.getElementById('cashInButton').addEventListener('click', function() {
       currentType = 'Cash In';
       document.querySelector('.cash-in-btn').classList.add('active');
       document.querySelector('.cash-out-btn').classList.remove('active');
@@ -420,6 +416,14 @@ document.getElementById('submitTransaction').addEventListener('click', function(
       document.querySelector('.cash-out-btn').classList.add('active');
       document.querySelector('.cash-in-btn').classList.remove('active');
     });
+    
+    document.getElementById('balance').value = balance.toFixed(2);
+      displayTransactions();
+      updateSummary();
+
+     
+
+   
 
     function updateSummary() {
       const summaryDisplay = document.getElementById('summaryDisplay');
