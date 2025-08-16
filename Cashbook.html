@@ -307,6 +307,20 @@
   </div>
 
   <script>
+    function saveTransactions() {
+  localStorage.setItem('transactions', JSON.stringify(transactions));
+}
+
+function loadTransactions() {
+  const saved = localStorage.getItem('transactions');
+  if (saved) {
+    transactions = JSON.parse(saved);
+    updateBalance();
+    displayTransactions();
+    updateSummary();
+  }
+}
+
     const categories = [
       "Salary", "Grocery", "Food", "Health", "Coffee", "Travel", 
       "Self Care", "Gas", "Medianet", "Fuel", "Phone Bill", "Wifi", 
@@ -321,14 +335,12 @@
     function selectCategory(category) {
       const categoryButton = document.querySelector('.accordion');
       categoryButton.textContent = category;
-      categoryButton.classList.remove('active');
-      document.getElementById('categoryList').style.display = 'none';
+     categoryButton.classList.remove('active');
+
     }
 
     document.querySelector('.accordion').addEventListener('click', function() {
-      this.classList.toggle('active');
-      const categoryList = document.getElementById('categoryList');
-      categoryList.style.display = categoryList.style.display === 'block' ? 'none' : 'block';
+  this.classList.toggle('active');
     });
 
     function populateCategories() {
@@ -351,10 +363,12 @@
       }
     });
 
-    document.getElementById('submitTransaction').addEventListener('click', function(event) {
-      event.preventDefault();
+    const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbzfIURYPr1ZMBlY8v-Bu5sv8TX5mIfyQib5nWzm_PaWGxNH6olCOtCsqpYNOZg5joY/exec";
 
-      const date = document.getElementById('date').value;
+document.getElementById('submitTransaction').addEventListener('click', function(event) {
+  event.preventDefault();
+
+    const date = document.getElementById('date').value;
       const remark = document.getElementById('remark').value;
       const category = document.querySelector('.accordion').textContent;
       const amount = parseFloat(document.getElementById('amount').value);
@@ -364,32 +378,49 @@
         return;
       }
 
-      if (currentType === 'Cash In') {
+     if (currentType === 'Cash In') {
         balance += amount;
       } else {
         balance -= amount;
       }
 
-      transactions.push({
-        date: date,
-        remark: remark,
-        category: category,
-        amount: amount,
+        const transaction = {
+        date,
+        remark,
+        category,
+        amount,
         type: currentType,
-        balance: balance
-      });
+        balance
+      };
 
-      document.getElementById('balance').value = balance.toFixed(2);
-      displayTransactions();
-      updateSummary();
+   transactions.push(transaction);
+  saveTransactions(); // Save after adding
+  document.getElementById('balance').value = balance.toFixed(2);
+  displayTransactions();
+  updateSummary();
+  
+  // Send to Google Sheets
+  fetch(GOOGLE_SHEET_API_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(transaction)
+  }).then(() => {
+    console.log('Transaction sent to Google Sheets');
+  }).catch((error) => {
+    console.error('Failed to send transaction to Google Sheets:', error);
+  });
 
-      document.getElementById('transactionForm').reset();
-      document.querySelector('.accordion').textContent = 'Select Category';
-      document.querySelector('.cash-in-btn').classList.remove('active');
-      document.querySelector('.cash-out-btn').classList.remove('active');
-    });
-
-    document.getElementById('cashInButton').addEventListener('click', function() {
+  //Reset
+  document.getElementById('transactionForm').reset();
+  document.querySelector('.accordion').textContent = 'Select Category';
+  document.querySelector('.cash-in-btn').classList.remove('active');
+  document.querySelector('.cash-out-btn').classList.remove('active');
+    });    
+    
+ document.getElementById('cashInButton').addEventListener('click', function() {
       currentType = 'Cash In';
       document.querySelector('.cash-in-btn').classList.add('active');
       document.querySelector('.cash-out-btn').classList.remove('active');
@@ -400,6 +431,14 @@
       document.querySelector('.cash-out-btn').classList.add('active');
       document.querySelector('.cash-in-btn').classList.remove('active');
     });
+    
+    document.getElementById('balance').value = balance.toFixed(2);
+      displayTransactions();
+      updateSummary();
+
+     
+
+   
 
     function updateSummary() {
       const summaryDisplay = document.getElementById('summaryDisplay');
@@ -468,6 +507,7 @@
           const confirmDelete = confirm("Are you sure you want to delete this transaction?");
           if (confirmDelete) {
             transactions.splice(index, 1);
+            saveTransactions(); // Save after deleting
             displayTransactions();
             updateBalance();
             updateSummary();
@@ -490,6 +530,7 @@
             transaction.date = newDate;
 
             updateBalance();
+            saveTransactions(); // Save after editing
             displayTransactions();
             updateSummary();
           }
@@ -523,8 +564,9 @@
       document.getElementById('balance').value = balance.toFixed(2);
     }
 
-    populateCategories();
-    updateSummary();
+ populateCategories();
+loadTransactions();  // <-- Load saved transactions here
+
   </script>
 </body>
 </html>
