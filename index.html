@@ -307,6 +307,20 @@
   </div>
 
   <script>
+    function saveTransactions() {
+  localStorage.setItem('transactions', JSON.stringify(transactions));
+}
+
+function loadTransactions() {
+  const saved = localStorage.getItem('transactions');
+  if (saved) {
+    transactions = JSON.parse(saved);
+    updateBalance();
+    displayTransactions();
+    updateSummary();
+  }
+}
+
     const categories = [
       "Salary", "Grocery", "Food", "Health", "Coffee", "Travel", 
       "Self Care", "Gas", "Medianet", "Fuel", "Phone Bill", "Wifi", 
@@ -380,6 +394,7 @@ document.getElementById('submitTransaction').addEventListener('click', function(
       };
 
    transactions.push(transaction);
+  saveTransactions(); // Save after adding
   document.getElementById('balance').value = balance.toFixed(2);
   displayTransactions();
   updateSummary();
@@ -492,6 +507,7 @@ document.getElementById('submitTransaction').addEventListener('click', function(
           const confirmDelete = confirm("Are you sure you want to delete this transaction?");
           if (confirmDelete) {
             transactions.splice(index, 1);
+            saveTransactions(); // Save after deleting
             displayTransactions();
             updateBalance();
             updateSummary();
@@ -514,6 +530,7 @@ document.getElementById('submitTransaction').addEventListener('click', function(
             transaction.date = newDate;
 
             updateBalance();
+            saveTransactions(); // Save after editing
             displayTransactions();
             updateSummary();
           }
@@ -547,8 +564,9 @@ document.getElementById('submitTransaction').addEventListener('click', function(
       document.getElementById('balance').value = balance.toFixed(2);
     }
 
-    populateCategories();
-    updateSummary();
+ populateCategories();
+loadTransactions();  // <-- Load saved transactions here
+
   </script>
 </body>
 </html>
