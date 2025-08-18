@@ -266,9 +266,10 @@
   <div class="container">
     <h1>Expense Tracker</h1>
     <div class="summary">
-      <h3>Summary for August</h3>
+      <h3>Summary</h3>
       <div id="summaryDisplay"></div>
       <button type="button" id="downloadCsvButton" class="csv-btn">Download CSV Report</button>
+      <button type="button" id="refreshButton" class="csv-btn" style="background:#9c27b0;">Refresh Data</button>
     </div>
     <form id="transactionForm">
       <label for="date">Date</label>
@@ -397,6 +398,7 @@ document.getElementById('submitTransaction').addEventListener('click', function(
 
    transactions.push(transaction);
   saveTransactions(); // Save after adding
+  updateBalance(); // Add this to recalculate balances for all transactions
   document.getElementById('balance').value = balance.toFixed(2);
   displayTransactions();
   updateSummary();
@@ -602,6 +604,7 @@ async function fetchTransactionsFromSheet() {
   </script>
 </body>
 </html>
+
 
 
 
