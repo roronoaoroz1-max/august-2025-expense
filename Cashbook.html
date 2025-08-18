@@ -406,15 +406,16 @@ document.getElementById('submitTransaction').addEventListener('click', function(
   // Send to Google Sheets
   fetch(GOOGLE_SHEET_API_URL, {
     method: 'POST',
-    mode: 'no-cors',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(transaction)
-  }).then(() => {
+  }).then(response => {
+    if (!response.ok) throw new Error('Failed to save transaction');
     console.log('Transaction sent to Google Sheets');
   }).catch((error) => {
     console.error('Failed to send transaction to Google Sheets:', error);
+    alert('Failed to save transaction to Google Sheets. It has been saved locally.');
   });
 
   //Reset
@@ -540,8 +541,6 @@ document.getElementById('submitTransaction').addEventListener('click', function(
 
             updateBalance();
             saveTransactions(); // Save after editing
-            displayTransactions();
-            updateSummary();
           } else {
             alart("Invalid input! Please provide valid values.");
           }
@@ -577,11 +576,10 @@ document.getElementById('submitTransaction').addEventListener('click', function(
 
  window.addEventListener('DOMContentLoaded', () => {
     populateCategories();
-fetchTransactionsFromSheet(); // Loads from Google Sheet instead of localStorage
-
-   // Add refresh button event listener
+   document.getElementById('categoryList').style.display = 'none'; // Ensure hidden
+fetchTransactionsFromSheet();
    document.getElementById('refreshButton').addEventListener('click', fetchTransactionsFromSheet);
- });
+});
     
 async function fetchTransactionsFromSheet() {
   try {
@@ -594,14 +592,13 @@ async function fetchTransactionsFromSheet() {
       category: entry.Category,
       amount: parseFloat(entry.Amount),
       type: entry.Type,
-      balance: parseFloat(entry.Balance)
+      balance: 0 // Set to 0 initially, recalculate below
     }));
 
-    updateBalance();
+    updateBalance(); // Recalculate balances based on transactions
     displayTransactions();
     updateSummary();
-    saveTransactions(); // Optional: store in localStorage
-
+    saveTransactions();
   } catch (error) {
     console.error("Error fetching from Google Sheets:", error);
   }
@@ -611,6 +608,7 @@ async function fetchTransactionsFromSheet() {
   </script>
 </body>
 </html>
+
 
 
 
