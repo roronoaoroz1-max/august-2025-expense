@@ -419,6 +419,7 @@ document.getElementById('submitTransaction').addEventListener('click', function(
 
   //Reset
   document.getElementById('transactionForm').reset();
+  document.getElementById('date').value = '2025-08-01';
   document.querySelector('.accordion').textContent = 'Select Category';
   document.querySelector('.cash-in-btn').classList.remove('active');
   document.querySelector('.cash-out-btn').classList.remove('active');
@@ -527,7 +528,11 @@ document.getElementById('submitTransaction').addEventListener('click', function(
           const newRemark = prompt("Enter new remark:", transaction.remark);
           const newDate = prompt("Enter new date (YYYY-MM-DD):", transaction.date);
 
-          if (newAmount !== null && newCategory !== null && newRemark !== null && newDate !== null) {
+          if (newAmount !== null && !isNaN(newAmount) && newAmount > 0 &&
+              newCategory !== null && newCategory.trim() !== '' &&
+              newRemark !== null && newRemark.trim() !== '' &&
+              newDate !== null && !isNaN(Date.parse(newDate))
+            ) {
             transaction.amount = parseFloat(newAmount);
             transaction.category = newCategory;
             transaction.remark = newRemark;
@@ -537,6 +542,8 @@ document.getElementById('submitTransaction').addEventListener('click', function(
             saveTransactions(); // Save after editing
             displayTransactions();
             updateSummary();
+          } else {
+            alart("Invalid input! Please provide valid values.");
           }
         });
 
@@ -604,6 +611,7 @@ async function fetchTransactionsFromSheet() {
   </script>
 </body>
 </html>
+
 
 
 
