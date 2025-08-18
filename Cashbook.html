@@ -112,6 +112,8 @@
       padding: 25px;
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      <button type="button" id="refreshButton" class="csv-btn" style="background:#9c27b0;">Refresh Data</button>
+
     }
     .summary h3 {
       color: #00695c;
@@ -567,6 +569,9 @@ document.getElementById('submitTransaction').addEventListener('click', function(
  window.addEventListener('DOMContentLoaded', () => {
     populateCategories();
 fetchTransactionsFromSheet(); // Loads from Google Sheet instead of localStorage
+
+   // Add refresh button event listener
+   document.getElementById('refreshButton').addEventListener('click', fetchTransactionsFromSheet);
  });
     
 async function fetchTransactionsFromSheet() {
@@ -597,6 +602,7 @@ async function fetchTransactionsFromSheet() {
   </script>
 </body>
 </html>
+
 
 
 
