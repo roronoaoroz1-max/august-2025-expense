@@ -308,6 +308,9 @@
       <div id="transactionList"></div>
     </div>
   </div>
+  
+  <!-- secrets.js contains your SECRET_TOKEN -->
+<script src="secrets.js"></script>
 
   <script>
     function saveTransactions() {
@@ -410,6 +413,7 @@ document.getElementById('submitTransaction').addEventListener('click', function(
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(transaction)
+    token: SECRET_TOKEN
   }).then(response => {
     if (!response.ok) throw new Error('Failed to save transaction');
     console.log('Transaction sent to Google Sheets');
