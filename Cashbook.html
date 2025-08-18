@@ -279,7 +279,7 @@
       <input type="text" id="remark" placeholder="Groceries, Salary..." required />
 
       <div id="categoryAccordionContainer">
-        <button type="button" class="accordion">Select Category</button>
+        <button type="button" class="accordion" id="categoryAccordion">Select Category</button>
         <div id="categoryList" class="category-list"></div>
       </div>
       <button type="button" id="addCategoryButton">+ Add New Category</button>
@@ -580,7 +580,8 @@ document.getElementById('submitTransaction').addEventListener('click', function(
 
  window.addEventListener('DOMContentLoaded', () => {
     populateCategories();
-   document.getElementById('categoryList').style.display = 'none'; // Ensure hidden
+   document.getElementById('categoryAccordion').addEventListener('click', function() {
+     this.classList.toggle('active');style.display = 'none'; // Ensure hidden
 fetchTransactionsFromSheet();
    document.getElementById('refreshButton').addEventListener('click', fetchTransactionsFromSheet);
 });
@@ -612,6 +613,7 @@ async function fetchTransactionsFromSheet() {
   </script>
 </body>
 </html>
+
 
 
 
