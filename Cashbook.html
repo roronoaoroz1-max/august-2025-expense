@@ -564,8 +564,10 @@ document.getElementById('submitTransaction').addEventListener('click', function(
       document.getElementById('balance').value = balance.toFixed(2);
     }
 
- populateCategories();
+ window.addEventListener('DOMContentLoaded', () => {
+    populateCategories();
 fetchTransactionsFromSheet(); // Loads from Google Sheet instead of localStorage
+ });
     
 async function fetchTransactionsFromSheet() {
   try {
@@ -595,5 +597,6 @@ async function fetchTransactionsFromSheet() {
   </script>
 </body>
 </html>
+
 
 
