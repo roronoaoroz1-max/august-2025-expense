@@ -112,8 +112,7 @@
       padding: 25px;
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-      <button type="button" id="refreshButton" class="csv-btn" style="background:#9c27b0;">Refresh Data</button>
-
+    
     }
     .summary h3 {
       color: #00695c;
@@ -396,8 +395,7 @@ document.getElementById('submitTransaction').addEventListener('click', function(
         category,
         amount,
         type: currentType,
-        balance
-      };
+        balance };
 
    transactions.push(transaction);
   saveTransactions(); // Save after adding
@@ -411,8 +409,9 @@ document.getElementById('submitTransaction').addEventListener('click', function(
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(transaction)
+      'Authorization': `Bearer ${SECRET_TOKEN}` // or use any custom header your Apps Script expects
+  },
+    body: JSON.stringify(transaction),
     token: SECRET_TOKEN
   }).then(response => {
     if (!response.ok) throw new Error('Failed to save transaction');
@@ -546,7 +545,7 @@ document.getElementById('submitTransaction').addEventListener('click', function(
             updateBalance();
             saveTransactions(); // Save after editing
           } else {
-            alart("Invalid input! Please provide valid values.");
+            alert("Invalid input! Please provide valid values.");
           }
         });
 
@@ -581,9 +580,21 @@ document.getElementById('submitTransaction').addEventListener('click', function(
  window.addEventListener('DOMContentLoaded', () => {
     populateCategories();
    document.getElementById('categoryAccordion').addEventListener('click', function() {
-     this.classList.toggle('active');style.display = 'none'; // Ensure hidden
+     this.classList.toggle('active');
+     // you can add code here to toggle display of category list if needed
+   });
+   
+     document.getElementById('refreshButton').addEventListener('click', fetchTransactionsFromSheet);
+
+   window.addEventListener('DOMContentLoaded', () => {
+  populateCategories();
+  fetchTransactionsFromSheet();
+});
+
+  
+   
 fetchTransactionsFromSheet();
-   document.getElementById('refreshButton').addEventListener('click', fetchTransactionsFromSheet);
+   
 });
     
 async function fetchTransactionsFromSheet() {
@@ -613,6 +624,7 @@ async function fetchTransactionsFromSheet() {
   </script>
 </body>
 </html>
+
 
 
 
